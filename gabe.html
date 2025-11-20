@@ -1,0 +1,236 @@
+<!-- index.html -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Gabe Martinez — Creative Designer</title>
+  <meta name="description" content="Gabe Martinez — Product & experience designer. Crafting UI and systems for B2B SaaS." />
+  <style>
+    :root{
+      --bg:#F7F8FA;
+      --panel:#fff;
+      --text:#0B1220;
+      --muted:#6B7280;
+      --accent:#5EC6FF;
+      --shadow: 0 12px 40px rgba(5,15,30,0.06);
+      --glass: rgba(255,255,255,0.8);
+      --max-width:1200px;
+      --radius:14px;
+      --gap:28px;
+      --transition: 280ms cubic-bezier(.2,.9,.2,1);
+    }
+
+    html,body{height:100%;margin:0;background:var(--bg);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;}
+    .wrap{max-width:var(--max-width);margin:72px auto;padding:0 24px;display:grid;grid-template-columns:1fr 520px;gap:64px;align-items:center;}
+    /* HERO LEFT: canvas / logo */
+    .hero-canvas {
+      min-height:420px;display:flex;align-items:center;justify-content:center;position:relative;
+      border-radius:var(--radius);background:linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.75));box-shadow:var(--shadow);
+      padding:48px;
+    }
+    canvas#logo3d{width:100%;height:100%;display:block;border-radius:12px;}
+    .logo-fallback{max-width:360px;width:70%;height:auto;display:block;margin:0 auto;}
+
+    /* HERO RIGHT: text */
+    .hero-copy{padding:8px 0;}
+    h1{font-size:34px;line-height:1.05;color:var(--text);margin:0 0 12px;font-weight:700;letter-spacing:-0.02em;}
+    p.lead{color:var(--muted);margin:0 0 22px;font-size:15px;max-width:36ch;}
+    .cta{display:inline-flex;align-items:center;gap:10px;padding:12px 18px;border-radius:999px;background:var(--panel);box-shadow:0 8px 24px rgba(5,15,30,0.06);border:1px solid rgba(11,18,32,0.04);text-decoration:none;color:var(--text);font-weight:600;transition:transform var(--transition),box-shadow var(--transition);}
+    .cta:hover{transform:translateY(-6px);box-shadow:0 20px 40px rgba(5,15,30,0.08);}
+    .meta{margin-top:18px;color:var(--muted);font-size:13px;}
+
+    /* Floating card grid below hero */
+    .card-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap);margin-top:48px;}
+    .card{
+      background:var(--panel);border-radius:12px;padding:20px;box-shadow:var(--shadow);transition:transform var(--transition),box-shadow var(--transition);
+      transform:translateZ(0);
+    }
+    .card:hover{transform:translateY(-8px);box-shadow:0 30px 60px rgba(5,15,30,0.08);}
+    .card h3{margin:0 0 8px;font-size:16px;}
+    .card p{color:var(--muted);margin:0;font-size:14px;}
+
+    /* Responsive */
+    @media (max-width:980px){
+      .wrap{grid-template-columns:1fr;gap:28px;padding:32px;}
+      .card-grid{grid-template-columns:repeat(2,1fr);}
+    }
+    @media (max-width:560px){
+      .card-grid{grid-template-columns:1fr;}
+      h1{font-size:28px;}
+    }
+
+    /* subtle mouse-parallax transform root */
+    .parallax { will-change: transform; }
+  </style>
+</head>
+<body>
+  <main class="wrap" id="siteRoot">
+    <section class="hero-canvas parallax" aria-labelledby="site-title" role="img" aria-label="Logo canvas showing 3D balloon letters">
+      <!-- Three.js canvas will be inserted here -->
+      <canvas id="logo3d" aria-hidden="true"></canvas>
+      <!-- fallback visible while GLB not loaded -->
+      <img class="logo-fallback" id="logoFallback" src="images/gooblogo.png" alt="Gabe Martinez logo" />
+    </section>
+
+    <section class="hero-copy">
+      <h1 id="site-title">Gabe Martinez</h1>
+      <p class="lead">Design systems & product experiences for B2B SaaS — beautiful, usable, and built to scale. I merge craft-level visual work with pragmatic product thinking.</p>
+      <a class="cta" href="#work">View work →</a>
+      <div class="meta">Available for freelance & collaborations • San Francisco / Remote</div>
+    </section>
+
+    <div style="grid-column:1/-1">
+      <div class="card-grid" id="cardGrid">
+        <article class="card">
+          <h3>Product Design</h3>
+          <p>Design systems, onboarding flows, component libraries with handoff-ready specs.</p>
+        </article>
+        <article class="card">
+          <h3>Visual Systems</h3>
+          <p>Branding, motion, and 3D assets — like the balloon wordmark — to bring personality to products.</p>
+        </article>
+        <article class="card">
+          <h3>Research & Strategy</h3>
+          <p>User research, cross-functional workshops, and metrics-aligned design roadmaps.</p>
+        </article>
+      </div>
+    </div>
+  </main>
+
+  <script>
+  // Lightweight Three.js loader that loads a glb if present, otherwise keeps fallback image.
+  (function(){
+    const canvas = document.getElementById('logo3d');
+    const fallback = document.getElementById('logoFallback');
+    const glbPath = 'assets/gabe_martinez_balloon.glb'; // adjust path
+
+    // Basic check for GLTF loader availability and WebGL context
+    function canWebGL() {
+      try {
+        const gl = canvas.getContext('webgl2') || canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        return !!gl;
+      } catch(e){ return false; }
+    }
+
+    if(!canWebGL()){
+      // keep fallback visible
+      canvas.style.display = 'none';
+      return;
+    }
+
+    // Lazy script loading for threejs and GLTFLoader
+    function loadScript(src){return new Promise((res,rej)=>{
+      const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=rej;document.head.appendChild(s);
+    })}
+
+    async function initThree(){
+      try{
+        await loadScript('https://cdn.jsdelivr.net/npm/three@0.162.0/build/three.min.js');
+        await loadScript('https://cdn.jsdelivr.net/npm/three@0.162.0/examples/js/loaders/GLTFLoader.js');
+        await loadScript('https://cdn.jsdelivr.net/npm/three@0.162.0/examples/js/controls/OrbitControls.js');
+      }catch(e){
+        console.warn('Three.js failed to load, using fallback image.', e);
+        canvas.style.display = 'none';
+        return;
+      }
+
+      const THREE = window.THREE;
+      const renderer = new THREE.WebGLRenderer({canvas:canvas, alpha:true, antialias:true});
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(canvas.clientWidth || 800, canvas.clientHeight || 480, false);
+      renderer.outputEncoding = THREE.sRGBEncoding;
+
+      const scene = new THREE.Scene();
+      scene.background = null;
+
+      const camera = new THREE.PerspectiveCamera(38, canvas.clientWidth / canvas.clientHeight, 0.1, 100);
+      camera.position.set(0, 0.4, 2.6);
+
+      // Lights
+      const key = new THREE.DirectionalLight(0xffffff, 1.1);
+      key.position.set(1, 1, 1);
+      scene.add(key);
+      const fill = new THREE.DirectionalLight(0xffffff, 0.5);
+      fill.position.set(-0.5, -1, -1);
+      scene.add(fill);
+      const amb = new THREE.AmbientLight(0xffffff, 0.35);
+      scene.add(amb);
+
+      // small pivot so we can gently float
+      const pivot = new THREE.Group();
+      scene.add(pivot);
+
+      // loader
+      const loader = new THREE.GLTFLoader();
+      let modelLoaded = false;
+
+      loader.load(glbPath,
+        (gltf)=>{
+          const model = gltf.scene;
+          // center and scale
+          const box = new THREE.Box3().setFromObject(model);
+          const size = new THREE.Vector3();
+          box.getSize(size);
+          const maxDim = Math.max(size.x, size.y, size.z);
+          model.scale.multiplyScalar(1.6 / maxDim);
+          box.getCenter(model.position).multiplyScalar(-1);
+
+          pivot.add(model);
+          modelLoaded = true;
+          fallback.style.display = 'none';
+        },
+        (xhr)=>{ /*progress: xhr.loaded/xhr.total*/ },
+        (err)=>{
+          console.warn('GLB load failed', err);
+          canvas.style.display='none';
+        }
+      );
+
+      // resize
+      function onResize(){
+        const w = canvas.clientWidth || canvas.parentElement.clientWidth;
+        const h = canvas.clientHeight || 420;
+        camera.aspect = w / h; camera.updateProjectionMatrix();
+        renderer.setSize(w, h, false);
+      }
+      window.addEventListener('resize', onResize, {passive:true});
+      onResize();
+
+      // gentle floating animation
+      let t0 = performance.now();
+      function animate(now){
+        const t = (now - t0) / 1000;
+        pivot.rotation.y = Math.sin(t * 0.35) * 0.12;
+        pivot.rotation.x = Math.sin(t * 0.12) * 0.06;
+        pivot.position.y = Math.sin(t * 0.6) * 0.03;
+        renderer.render(scene, camera);
+        requestAnimationFrame(animate);
+      }
+      requestAnimationFrame(animate);
+
+      // subtle mouse parallax on container
+      const root = document.getElementById('siteRoot');
+      root.addEventListener('mousemove', (ev)=>{
+        const {width,left,top,height} = canvas.getBoundingClientRect();
+        const cx = left + width/2, cy = top + height/2;
+        const dx = (ev.clientX - cx)/width;
+        const dy = (ev.clientY - cy)/height;
+        pivot.rotation.y = dx * 0.25;
+        pivot.rotation.x = -dy * 0.18;
+        pivot.position.x = dx * 0.08;
+        pivot.position.y = Math.sin((performance.now()-t0)/1000)*0.03 + (-dy*0.06);
+      });
+
+    }
+
+    // start loading on idle to avoid blocking
+    if('requestIdleCallback' in window){
+      requestIdleCallback(initThree, {timeout:1500});
+    }else{
+      setTimeout(initThree, 600);
+    }
+  })();
+  </script>
+</body>
+</html>
